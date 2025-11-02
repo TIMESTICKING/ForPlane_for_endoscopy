@@ -16,6 +16,7 @@ from forplanes.runners import video_trainer
 from forplanes.utils.create_rendering import render_speed, render_to_path
 from forplanes.utils.parse_args import parse_optfloat
 
+sys.path.append('/mnt/d/jiabao/repo/ForPlane_orgin/forplanes')
 
 def seed_everything(seed):
     random.seed(seed)
