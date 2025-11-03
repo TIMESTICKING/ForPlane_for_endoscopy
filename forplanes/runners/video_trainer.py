@@ -8,6 +8,9 @@ import pandas as pd
 import torch
 import torch.utils.data
 
+from tools.mytool import *
+
+
 from forplanes.datasets import VideoEndoDataset, VideoHamlynDataset
 from forplanes.utils.ema import EMA
 from forplanes.utils.my_tqdm import tqdm
@@ -323,7 +326,7 @@ class VideoTrainer(BaseTrainer):
             DistortionLoss(kwargs.get('distortion_loss_weight', 0.0)),
             MonoDepthLoss(kwargs.get('mono_depth_weight', 0.0), what='field'),
         ]
-        if not self.model.use_occ_grid: # proposal network
+        if not unwrap_model(self.model).use_occ_grid: # proposal network
             losses += [
                 PlaneTV(kwargs.get('plane_tv_weight_proposal_net', 0.0), what='proposal_network'),
                 L1TimePlanes(kwargs.get('l1_time_planes_proposal_net', 0.0), what='proposal_network'),

@@ -3,7 +3,7 @@ config = {
 
     'expname': 'endo_cutting_9k',
     'logdir': './exps/endonerf_9k',
-    'device': 'cuda:0',
+    'device': 'cpu',
 
     'data_downsample': 1.0,
     'data_dirs': ['data/endonerf_full_datasets/cutting_tissues_twice'],

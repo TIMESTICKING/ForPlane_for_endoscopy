@@ -13,6 +13,8 @@ from forplanes.models.lowrank_model import LowrankModel
 from forplanes.ops.losses.histogram_loss import interlevel_loss
 from forplanes.ops.losses.monodepth_loss import ScaleAndShiftInvariantLoss
 from forplanes.raymarching.ray_samplers import RaySamples
+from tools.mytool import *
+
 
 @torch.jit.script
 def compute_plane_tv(t: torch.Tensor):
@@ -75,9 +77,9 @@ class PlaneTV(Regularizer):
     def _regularize(self, model: LowrankModel, **kwargs):
         multi_res_grids: Sequence[nn.ParameterList]
         if self.what == 'field':
-            multi_res_grids = model.field.grids
+            multi_res_grids = unwrap_model(model).field.grids
         elif self.what == 'proposal_network':
-            multi_res_grids = [p.grids for p in model.proposal_networks]
+            multi_res_grids = [p.grids for p in unwrap_model(model).proposal_networks]
         else:
             raise NotImplementedError(self.what)
         total = 0
@@ -107,13 +109,13 @@ class TimeSmoothness(Regularizer):
     def _regularize(self, model: LowrankModel, **kwargs) -> torch.Tensor:
         multi_res_grids: Sequence[nn.ParameterList]
         if self.what == 'field':
-            multi_res_grids = model.field.grids
+            multi_res_grids = unwrap_model(model).field.grids
         elif self.what == 'proposal_network':
-            multi_res_grids = [p.grids for p in model.proposal_networks]
+            multi_res_grids = [p.grids for p in unwrap_model(model).proposal_networks]
         else:
             raise NotImplementedError(self.what)
         total = 0
-        # model.grids is 6 x [1, rank * F_dim, reso, reso]
+        # unwrap_model(model).grids is 6 x [1, rank * F_dim, reso, reso]
         for grids in multi_res_grids:
             if len(grids) == 3:
                 time_grids = []
@@ -179,7 +181,7 @@ class L1ProposalNetwork(Regularizer):
         super().__init__('l1-proposal-network', initial_value)
 
     def _regularize(self, model: LowrankModel, **kwargs) -> torch.Tensor:
-        grids = [p.grids for p in model.proposal_networks]
+        grids = [p.grids for p in unwrap_model(model).proposal_networks]
         total = 0.0
         for pn_grids in grids:
             for grid in pn_grids:
@@ -230,7 +232,7 @@ class DepthLossHuber(Regularizer):
                 depth = model_out['depth']
                 total += self.compute_depth_loss_huber(target_depth, depth, valid_mask)
             elif self.what == 'proposal_network':
-                for i in range(model.num_proposal_iterations):
+                for i in range(unwrap_model(model).num_proposal_iterations):
                     depth = model_out[f"prop_depth_{i}"]
                     total += self.compute_depth_loss_huber(target_depth, depth, valid_mask)
             else:
@@ -249,12 +251,12 @@ class L1TimePlanes(Regularizer):
         self.what = what
 
     def _regularize(self, model: LowrankModel, **kwargs) -> torch.Tensor:
-        # model.grids is 6 x [1, rank * F_dim, reso, reso]
+        # unwrap_model(model).grids is 6 x [1, rank * F_dim, reso, reso]
         multi_res_grids: Sequence[nn.ParameterList]
         if self.what == 'field':
-            multi_res_grids = model.field.grids
+            multi_res_grids = unwrap_model(model).field.grids
         elif self.what == 'proposal_network':
-            multi_res_grids = [p.grids for p in model.proposal_networks]
+            multi_res_grids = [p.grids for p in unwrap_model(model).proposal_networks]
         else:
             raise NotImplementedError(self.what)
 
@@ -319,7 +321,7 @@ class MonoDepthLoss(Regularizer):
                     return torch.tensor(0.0)
                 total += self.criteria(depth.view(-1,64,64), target_depth.view(-1,64,64), valid_mask.view(-1,64,64)) # a swift fix for mono depth loss
             elif self.what == 'proposal_network':
-                for i in range(model.num_proposal_iterations):
+                for i in range(unwrap_model(model).num_proposal_iterations):
                     depth = model_out[f"prop_depth_{i}"]
                     if depth.shape[0] % (128*128) != 0:
                         print('Warning: MonodepthLoss failed')

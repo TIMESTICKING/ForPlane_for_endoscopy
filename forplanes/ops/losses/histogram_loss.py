@@ -2,6 +2,7 @@
 Implements the histogram loss from mipnerf360
 """
 import torch
+from tools.mytool import *
 
 
 EPS = 1.0e-7
@@ -66,7 +67,7 @@ def ray_samples_to_sdist(ray_samples):
 
 def interlevel_loss(weights_list, ray_samples_list):
     """Calculates the proposal loss in the MipNeRF-360 paper.
-    https://github.com/kakaobrain/NeRF-Factory/blob/f61bb8744a5cb4820a4d968fb3bfbed777550f4a/src/model/mipnerf360/model.py#L515
+    https://github.com/kakaobrain/NeRF-Factory/blob/f61bb8744a5cb4820a4d968fb3bfbed777550f4a/src/model/mipnerf360/unwrap_model(model).py#L515
     https://github.com/google-research/multinerf/blob/b02228160d3179300c7d499dca28cb9ca3677f32/internal/train_utils.py#L133
     """
     c = ray_samples_to_sdist(ray_samples_list[-1]).detach()

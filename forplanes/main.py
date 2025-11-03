@@ -15,8 +15,12 @@ import torch.utils.data
 from forplanes.runners import video_trainer
 from forplanes.utils.create_rendering import render_speed, render_to_path
 from forplanes.utils.parse_args import parse_optfloat
+from tools.mytool import *
 
-sys.path.append('/mnt/d/jiabao/repo/ForPlane_orgin/forplanes')
+# sys.path.append('/mnt/d/jiabao/repo/ForPlane_orgin/forplanes')
+# script_dir = os.path.dirname(os.path.abspath(__file__))
+# sys.path.append(script_dir)
+
 
 def seed_everything(seed):
     random.seed(seed)
@@ -148,20 +152,20 @@ def main():
     trainer = init_trainer(**config)
 
     # case1: if the model exists, load it
-    # if args.log_dir is None and os.path.exists(os.path.join(config['logdir'], config['expname'], "model.pth")):
+    # if args.log_dir is None and os.path.exists(os.path.join(config['logdir'], config['expname'], "unwrap_model(model).pth")):
     #     args.log_dir = os.path.join(config['logdir'], config['expname'])
 
     # case2: always train a new model
     if args.log_dir is None:
         if (args.validate_only is True or args.render_only is True or args.spacetime_only is True or args.test_speed is True):
             args.log_dir = os.path.join(config['logdir'], config['expname'])
-            checkpoint_path = os.path.join(args.log_dir, "model.pth")
+            checkpoint_path = os.path.join(args.log_dir, "unwrap_model(model).pth")
             is_training = not (args.validate_only or args.render_only or args.spacetime_only or args.test_speed)
             trainer.load_model(torch.load(checkpoint_path), is_training=is_training)
         else:
             pass
     else:
-        checkpoint_path = os.path.join(args.log_dir, "model.pth")
+        checkpoint_path = os.path.join(args.log_dir, "unwrap_model(model).pth")
         is_training = not (args.validate_only or args.render_only or args.spacetime_only or args.test_speed)
         trainer.load_model(torch.load(checkpoint_path), is_training=is_training)
 

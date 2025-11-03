@@ -21,6 +21,7 @@ from forplanes.runners.regularization import Regularizer
 from forplanes.ops.lr_scheduling import (
     get_cosine_schedule_with_warmup, get_step_schedule_with_warmup
 )
+from tools.mytool import *
 # from torch.profiler import profile, record_function, ProfilerActivity
 from utils.eval_rgb import img2mse, mse2psnr, ssim, lpips_warper
 _lpips = lpips_warper()
@@ -61,7 +62,10 @@ class BaseTrainer(abc.ABC):
         self.regularizers = self.init_regularizers(**self.extra_args)
         self.gscaler = torch.cuda.amp.GradScaler(enabled=self.train_fp16)
 
-        self.model.to(self.device)
+        visible = list(range(torch.cuda.device_count()))   # e.g. [0, 1]
+        primary = visible[0]
+        self.model.to(primary)
+        self.model = torch.nn.DataParallel(self.model, device_ids=visible)
 
     @abc.abstractmethod
     def eval_step(self, data, **kwargs) -> MutableMapping[str, torch.Tensor]:
@@ -111,7 +115,7 @@ class BaseTrainer(abc.ABC):
         return scale <= self.gscaler.get_scale()
 
     def post_step(self, progress_bar):
-        self.model.step_after_iter(self.global_step)
+        unwrap_model(self.model).step_after_iter(self.global_step)
         if self.global_step % self.calc_metrics_every == 0:
             progress_bar.set_postfix_str(
                 losses_to_postfix(self.loss_info, lr=self.lr), refresh=False)
@@ -148,7 +152,7 @@ class BaseTrainer(abc.ABC):
             batch_iter = iter(self.train_data_loader)
             while self.global_step < self.num_steps:
                 self.timer.reset()
-                self.model.step_before_iter(self.global_step)
+                unwrap_model(self.model).step_before_iter(self.global_step)
                 self.global_step += 1
                 self.timer.check("step-before-iter")
                 try:
@@ -175,7 +179,7 @@ class BaseTrainer(abc.ABC):
                 self.post_step(progress_bar=pb)
                 self.timer.check("after-step")
         finally:
-            self.save_model("model.pth")
+            self.save_model("unwrap_model(model).pth")
             pb.close()
             self.writer.close()
 
@@ -352,7 +356,7 @@ class BaseTrainer(abc.ABC):
 
     def get_save_dict(self):
         return {
-            "model": self.model.state_dict(),
+            "model": unwrap_model(self.model).state_dict(),
             "optimizer": self.optimizer.state_dict(),
             "lr_scheduler": self.scheduler.state_dict() if self.scheduler is not None else None,
             "global_step": self.global_step
@@ -364,7 +368,7 @@ class BaseTrainer(abc.ABC):
         torch.save(self.get_save_dict(), model_fname)
 
     def load_model(self, checkpoint_data, is_training: bool = True):
-        self.model.load_state_dict(checkpoint_data["model"], strict=False)
+        unwrap_model(self.model).load_state_dict(checkpoint_data["model"], strict=False)
         log.info("=> Loaded model state from checkpoint")
 
         if is_training:
@@ -424,7 +428,7 @@ class BaseTrainer(abc.ABC):
         optim_type = kwargs['optim_type']
         if optim_type == 'adam':
             optim = torch.optim.Adam(
-                params=self.model.get_params(kwargs['lr']), eps=1e-15)
+                params=unwrap_model(self.model).get_params(kwargs['lr']), eps=1e-15)
         else:
             raise NotImplementedError()
         return optim
@@ -471,12 +475,12 @@ def initialize_model(
     """Initialize a `LowrankModel` according to the **kwargs parameters.
 
     Args:
-        runner: The runner object which will hold the model.
+        runner: The runner object which will hold the unwrap_model(model).
                 Needed here to fetch dataset parameters.
         **kwargs: Extra parameters to pass to the model
 
     Returns:
-        Initialized LowrankModel.
+        Initialized Lowrankunwrap_model(model).
     """
     extra_args = copy(kwargs)
     extra_args.pop('global_scale', None)
@@ -513,8 +517,8 @@ def initialize_model(
         use_appearance_embedding=False,
         num_images=num_images,
         **extra_args)
-    log.info(f"Initialized {model.__class__} model with "
-             f"{sum(np.prod(p.shape) for p in model.parameters()):,} parameters, "
-             f"using ndc {model.is_ndc} and contraction {model.is_contracted}. "
-             f"Linear decoder: {model.linear_decoder}.")
+    log.info(f"Initialized {unwrap_model(model).__class__} model with "
+             f"{sum(np.prod(p.shape) for p in unwrap_model(model).parameters()):,} parameters, "
+             f"using ndc {unwrap_model(model).is_ndc} and contraction {unwrap_model(model).is_contracted}. "
+             f"Linear decoder: {unwrap_model(model).linear_decoder}.")
     return model

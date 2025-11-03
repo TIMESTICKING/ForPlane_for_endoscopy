@@ -12,6 +12,7 @@ from forplanes.models.lowrank_model import LowrankModel
 from forplanes.utils.my_tqdm import tqdm
 from forplanes.ops.image.io import write_video_to_file
 from forplanes.runners.video_trainer import VideoTrainer
+from tools.mytool import *
 
 
 @torch.no_grad()
@@ -205,10 +206,10 @@ def normalize_for_disp(img):
 
 #     # Store original parameters from main field and proposal-network field
 #     parameters = []
-#     for multires_grids in model.field.grids:
+#     for multires_grids in unwrap_model(model).field.grids:
 #         parameters.append([grid.data for grid in multires_grids])
 #     pn_parameters = []
-#     for pn in model.proposal_networks:
+#     for pn in unwrap_model(model).proposal_networks:
 #         pn_parameters.append([grid_plane.data for grid_plane in pn.grids])
 
 #     camdata = None
@@ -230,23 +231,23 @@ def normalize_for_disp(img):
 #             img_h, img_w = dataset.img_h[img_idx], dataset.img_w[img_idx]
 
 #         # Full model: turn on time-planes
-#         for i in range(len(model.field.grids)):
+#         for i in range(len(unwrap_model(model).field.grids)):
 #             for plane_idx in [2, 4, 5]:
-#                 model.field.grids[i][plane_idx].data = parameters[i][plane_idx]
-#         for i in range(len(model.proposal_networks)):
+#                 unwrap_model(model).field.grids[i][plane_idx].data = parameters[i][plane_idx]
+#         for i in range(len(unwrap_model(model).proposal_networks)):
 #             for plane_idx in [2, 4, 5]:
-#                 model.proposal_networks[i].grids[plane_idx].data = pn_parameters[i][plane_idx]
+#                 unwrap_model(model).proposal_networks[i].grids[plane_idx].data = pn_parameters[i][plane_idx]
 #         preds = trainer.eval_step(camdata)
 #         full_out = preds["rgb"].reshape(img_h, img_w, 3).cpu()
 
 #         # Space-only model: turn off time-planes
-#         for i in range(len(model.field.grids)):
+#         for i in range(len(unwrap_model(model).field.grids)):
 #             for plane_idx in [2, 4, 5]:  # time-grids off
-#                 model.field.grids[i][plane_idx].data = torch.ones_like(
+#                 unwrap_model(model).field.grids[i][plane_idx].data = torch.ones_like(
 #                     parameters[i][plane_idx])
-#         for i in range(len(model.proposal_networks)):
+#         for i in range(len(unwrap_model(model).proposal_networks)):
 #             for plane_idx in [2, 4, 5]:
-#                 model.proposal_networks[i].grids[plane_idx].data = torch.ones_like(
+#                 unwrap_model(model).proposal_networks[i].grids[plane_idx].data = torch.ones_like(
 #                     pn_parameters[i][plane_idx])
 #         preds = trainer.eval_step(camdata)
 #         spatial_out = preds["rgb"].reshape(img_h, img_w, 3).cpu()
@@ -285,11 +286,11 @@ def decompose_space_time(trainer: VideoTrainer, extra_name: str = "") -> None:
 
     # Store original parameters from main field and proposal-network field
     parameters = []
-    for multires_grids in model.field.grids:
+    for multires_grids in unwrap_model(model).field.grids:
         parameters.append([grid.data for grid in multires_grids])
     pn_parameters = []
-    if model.occ_grid_reso <= 0:
-        for pn in model.proposal_networks:
+    if unwrap_model(model).occ_grid_reso <= 0:
+        for pn in unwrap_model(model).proposal_networks:
             pn_parameters.append([grid_plane.data for grid_plane in pn.grids])
 
     camdata = None
@@ -311,25 +312,25 @@ def decompose_space_time(trainer: VideoTrainer, extra_name: str = "") -> None:
             img_h, img_w = dataset.img_h[img_idx], dataset.img_w[img_idx]
 
         # Full model: turn on time-planes
-        for i in range(len(model.field.grids)):
+        for i in range(len(unwrap_model(model).field.grids)):
             for plane_idx in [2, 4, 5]:
-                model.field.grids[i][plane_idx].data = parameters[i][plane_idx]
-        if model.occ_grid_reso <= 0:
-            for i in range(len(model.proposal_networks)):
+                unwrap_model(model).field.grids[i][plane_idx].data = parameters[i][plane_idx]
+        if unwrap_model(model).occ_grid_reso <= 0:
+            for i in range(len(unwrap_model(model).proposal_networks)):
                 for plane_idx in [2, 4, 5]:
-                    model.proposal_networks[i].grids[plane_idx].data = pn_parameters[i][plane_idx]
+                    unwrap_model(model).proposal_networks[i].grids[plane_idx].data = pn_parameters[i][plane_idx]
         preds = trainer.eval_step(camdata)
         full_out = preds["rgb"].reshape(img_h, img_w, 3).cpu()
 
         # Space-only model: turn off time-planes
-        for i in range(len(model.field.grids)):
+        for i in range(len(unwrap_model(model).field.grids)):
             for plane_idx in [2, 4, 5]:  # time-grids off
-                model.field.grids[i][plane_idx].data = torch.ones_like(
+                unwrap_model(model).field.grids[i][plane_idx].data = torch.ones_like(
                     parameters[i][plane_idx])
-        if model.occ_grid_reso <= 0:
-            for i in range(len(model.proposal_networks)):
+        if unwrap_model(model).occ_grid_reso <= 0:
+            for i in range(len(unwrap_model(model).proposal_networks)):
                 for plane_idx in [2, 4, 5]:
-                    model.proposal_networks[i].grids[plane_idx].data = torch.ones_like(
+                    unwrap_model(model).proposal_networks[i].grids[plane_idx].data = torch.ones_like(
                         pn_parameters[i][plane_idx])
         preds = trainer.eval_step(camdata)
         spatial_out = preds["rgb"].reshape(img_h, img_w, 3).cpu()

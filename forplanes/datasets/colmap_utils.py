@@ -2,6 +2,7 @@ import collections
 import struct
 
 import numpy as np
+from tools.mytool import *
 
 
 Camera = collections.namedtuple("Camera", ["id", "model", "width", "height", "params"])
@@ -20,7 +21,7 @@ CAMERA_MODELS = {
     CameraModel(model_id=9, model_name="RADIAL_FISHEYE", num_params=5),
     CameraModel(model_id=10, model_name="THIN_PRISM_FISHEYE", num_params=12),
 }
-CAMERA_MODEL_IDS = dict([(camera_model.model_id, camera_model) for camera_model in CAMERA_MODELS])
+CAMERA_MODEL_IDS = dict([(camera_unwrap_model(model).model_id, camera_model) for camera_model in CAMERA_MODELS])
 
 
 class Image(BaseImage):

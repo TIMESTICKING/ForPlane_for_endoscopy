@@ -14,6 +14,7 @@ from forplanes.datasets.base_dataset import BaseDataset
 from forplanes.datasets.intrinsics import Intrinsics
 from forplanes.datasets.ray_utils import average_poses
 from forplanes.ops.image.io import read_png
+from tools.mytool import *
 
 
 class PhototourismScenes(Enum):
@@ -99,7 +100,7 @@ class PhotoTourismDataset(BaseDataset):
 
         # ugly hack: num_images needs to be the number of training images. This is needed to
         # initialize the appearance embedding tensor to the correct size even if we're just
-        # reloading a previous model.
+        # reloading a previous unwrap_model(model).
         self.num_images = self.get_num_train_images(datadir)
         self.camera_ids = camera_ids  # noqa
         self.near_fars = near_fars  # noqa
