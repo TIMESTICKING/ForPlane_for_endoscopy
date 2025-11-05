@@ -6,7 +6,7 @@ config = {
     'device': 'cuda:0',
 
     'data_downsample': 1.0,
-    'data_dirs': ['data/hamlyn_lerplane/hamlyn_seq1'],
+    'data_dirs': ['data/hamlyn_forplane/hamlyn_seq1'],
     'contract': False,
     'ndc': True,
     'ndc_far': 1.2,
