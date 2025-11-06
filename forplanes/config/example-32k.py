@@ -1,7 +1,7 @@
 config = {
     'description': 'iter32k',
 
-    'expname': 'hamlyn1_32k',
+    'expname': 'hamlyn1_32k_MaskFalse',
     'logdir': './exps/hamlyn_32k_gt_depth',
     'device': 'cuda:0',
 
@@ -15,7 +15,7 @@ config = {
     'ist_step': 180*2,
     'keyframes': False,
     'scene_bbox': [[-1.0, -1.0, -1.0], [1.0, 1.0, 0.1]],
-    'maskIS': True,
+    'maskIS': False,
     'frequency_ratio': 1,
     'near_scaling': 0.95,
     'bg_color': 0,
