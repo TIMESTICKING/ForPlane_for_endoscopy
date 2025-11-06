@@ -2,7 +2,7 @@ config = {
     'description': 'iter32k',
 
     'expname': 'hamlyn1_32k_MaskFalse',
-    'logdir': './exps/hamlyn_32k_gt_depth',
+    'logdir': './exps/hamlyn_32k_mono_depth',
     'device': 'cuda:0',
 
     'data_downsample': 1.0,
@@ -19,7 +19,7 @@ config = {
     'frequency_ratio': 1,
     'near_scaling': 0.95,
     'bg_color': 0,
-    'depth_type': 'gt_depth',
+    'depth_type': 'mono_depth',
     # Optimization settings
     'num_steps': 1800*2,
     'batch_size': 32768//2,
@@ -37,16 +37,16 @@ config = {
     # 'distortion_loss_weight': 0.001, [yc: 2.20 remove dist loss for better scene recon]
     'distortion_loss_weight': 0.0,
     'histogram_loss_weight': 1.0,
-    'mono_depth_weight': 0, 
-    'mono_depth_weight_proposal_net': 0, 
+    'mono_depth_weight': 1.0, 
+    'mono_depth_weight_proposal_net': 1.0, 
     'l1_time_planes': 0.0001,
     'l1_time_planes_proposal_net': 0.0001,
     'plane_tv_weight': 0.0001,
     'plane_tv_weight_proposal_net': 0.0001,
     'time_smoothness_weight': 0.03,
     'time_smoothness_weight_proposal_net': 0.0001,
-    'depth_huber_weight': 1.0,
-    'depth_huber_weight_proposal_net': 1.0,
+    'depth_huber_weight': 0.0,
+    'depth_huber_weight_proposal_net': 0.0,
     'step_iter': 900*3,
 
     # Training settings, since we valid after train, just disable valid
